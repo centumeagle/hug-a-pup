@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { RefreshCw, MapPin, Phone, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RefreshCw, ChevronLeft, ChevronRight, ChevronRight as ArrowIcon } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Header from '@/components/Header';
+import HeroSection from '@/components/HeroSection';
+import AnimalCard from '@/components/AnimalCard';
 
 interface Animal {
   id: string;
@@ -36,18 +37,16 @@ const Index = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'dog' | 'cat' | 'other'>('all');
   const { toast } = useToast();
-  const itemsPerPage = 15;
+  const itemsPerPage = 12;
 
   const fetchAnimals = async () => {
     try {
-      // Get total count
       const { count } = await supabase
         .from('abandoned_animals')
         .select('*', { count: 'exact', head: true });
       
       setTotalCount(count || 0);
 
-      // Get all data
       const { data, error } = await supabase
         .from('abandoned_animals')
         .select('*')
@@ -79,7 +78,6 @@ const Index = () => {
         description: '데이터 수집을 시작했습니다. 잠시 후 새로고침하세요.',
       });
 
-      // 5초 후 자동으로 데이터 새로고침
       setTimeout(() => {
         fetchAnimals();
       }, 5000);
@@ -125,26 +123,6 @@ const Index = () => {
   const catCount = animals.filter(a => getCategoryFromKind(a.kindcd) === 'cat').length;
   const otherCount = animals.filter(a => getCategoryFromKind(a.kindcd) === 'other').length;
 
-  const getProcessStateBadge = (state: string | null) => {
-    if (!state) return <Badge variant="secondary">알 수 없음</Badge>;
-    
-    switch (state) {
-      case '보호중':
-        return <Badge variant="default">보호중</Badge>;
-      case '종료(입양)':
-        return <Badge className="bg-green-600">입양됨</Badge>;
-      case '종료(자연사)':
-        return <Badge variant="secondary">종료</Badge>;
-      default:
-        return <Badge variant="outline">{state}</Badge>;
-    }
-  };
-
-  const getSexText = (sex: string | null) => {
-    if (!sex) return '성별 미상';
-    return sex === 'M' ? '수컷' : sex === 'F' ? '암컷' : sex === 'Q' ? '미상' : sex;
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -158,130 +136,125 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">유기동물 보호 현황</h1>
-            <p className="text-muted-foreground">
-              총 {totalCount}개의 유기동물 정보 (개: {dogCount}, 고양이: {catCount}, 기타: {otherCount})
-            </p>
+      <Header />
+      <HeroSection />
+      
+      {/* Animals Section */}
+      <section id="animals" className="py-12 md:py-16">
+        <div className="container mx-auto px-4">
+          {/* Section Header */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                가족을 기다리고 있어요
+              </h2>
+              <p className="text-muted-foreground">
+                새로운 삶을 함께할 평생 가족을 찾습니다.
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                onClick={updateData} 
+                disabled={fetching}
+                className="gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${fetching ? 'animate-spin' : ''}`} />
+                데이터 업데이트
+              </Button>
+              <Button variant="link" className="gap-1 text-primary">
+                모두 보기
+                <ArrowIcon className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-          <Button onClick={updateData} disabled={fetching} size="lg">
-            <RefreshCw className={`w-4 h-4 mr-2 ${fetching ? 'animate-spin' : ''}`} />
-            데이터 업데이트
-          </Button>
-        </div>
 
-        <Tabs value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as any)} className="mb-6">
-          <TabsList className="grid w-full max-w-md grid-cols-4">
-            <TabsTrigger value="all">전체 ({animals.length})</TabsTrigger>
-            <TabsTrigger value="dog">개 ({dogCount})</TabsTrigger>
-            <TabsTrigger value="cat">고양이 ({catCount})</TabsTrigger>
-            <TabsTrigger value="other">기타 ({otherCount})</TabsTrigger>
-          </TabsList>
-        </Tabs>
+          {/* Category Tabs */}
+          <Tabs value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as any)} className="mb-8">
+            <TabsList className="bg-secondary/50 p-1">
+              <TabsTrigger value="all" className="data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                전체 ({animals.length})
+              </TabsTrigger>
+              <TabsTrigger value="dog" className="data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                강아지 ({dogCount})
+              </TabsTrigger>
+              <TabsTrigger value="cat" className="data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                고양이 ({catCount})
+              </TabsTrigger>
+              <TabsTrigger value="other" className="data-[state=active]:bg-card data-[state=active]:shadow-sm">
+                기타 ({otherCount})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-        {filteredAnimals.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
+          {filteredAnimals.length === 0 ? (
+            <div className="bg-card rounded-2xl p-12 text-center shadow-sm">
               <p className="text-muted-foreground mb-4">등록된 동물 정보가 없습니다.</p>
               <Button onClick={updateData} disabled={fetching}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${fetching ? 'animate-spin' : ''}`} />
                 데이터 가져오기
               </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {currentAnimals.map((animal) => (
-              <Card key={animal.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                {animal.popfile && (
-                  <div className="aspect-video overflow-hidden bg-muted">
-                    <img
-                      src={animal.popfile}
-                      alt={animal.kindcd || '동물 사진'}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-semibold text-lg">
-                        {animal.kindcd || '품종 미상'}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {getSexText(animal.sexcd)} • {animal.age || '나이 미상'}
-                      </p>
-                    </div>
-                    {getProcessStateBadge(animal.processstate)}
-                  </div>
-
-                  {animal.specialmark && (
-                    <p className="text-sm mb-3 text-muted-foreground line-clamp-2">
-                      {animal.specialmark}
-                    </p>
-                  )}
-
-                  <div className="space-y-2 text-sm">
-                    {animal.carenm && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <span className="truncate">{animal.carenm}</span>
-                      </div>
-                    )}
-                    {animal.caretel && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <span>{animal.caretel}</span>
-                      </div>
-                    )}
-                    {animal.happendt && (
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <span>{animal.happendt}</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-              ))}
             </div>
-
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  이전
-                </Button>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    {currentPage} / {totalPages} 페이지
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    ({startIndex + 1}-{Math.min(endIndex, filteredAnimals.length)} / {filteredAnimals.length}개)
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  다음
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+          ) : (
+            <>
+              {/* Animal Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
+                {currentAnimals.map((animal, index) => (
+                  <AnimalCard 
+                    key={animal.id} 
+                    animal={animal} 
+                    index={startIndex + index} 
+                  />
+                ))}
               </div>
-            )}
-          </>
-        )}
-      </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="gap-1"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    이전
+                  </Button>
+                  
+                  <div className="flex items-center gap-2 px-4">
+                    <span className="text-sm font-medium text-foreground">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      ({filteredAnimals.length}마리)
+                    </span>
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="gap-1"
+                  >
+                    다음
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+      
+      {/* Footer */}
+      <footer className="bg-card border-t border-border py-8">
+        <div className="container mx-auto px-4 text-center text-muted-foreground text-sm">
+          <p>© 2024 포에버홈. 모든 생명은 소중합니다.</p>
+        </div>
+      </footer>
     </div>
   );
 };

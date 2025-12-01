@@ -57,6 +57,16 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        warm: {
+          beige: "hsl(var(--warm-beige))",
+          brown: "hsl(var(--warm-brown))",
+          cream: "hsl(var(--soft-cream))",
+        },
+        badge: {
+          female: "hsl(var(--badge-female))",
+          male: "hsl(var(--badge-male))",
+        },
+        success: "hsl(var(--success))",
       },
       borderRadius: {
         lg: "var(--radius)",
