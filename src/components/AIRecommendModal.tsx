@@ -56,7 +56,7 @@ const AIRecommendModal = ({ open, onOpenChange }: AIRecommendModalProps) => {
             contents: [{
               parts: [{ text: `${systemPrompt}\n\n사용자 정보:\n${userInput}\n\n위 정보를 바탕으로 적합한 반려동물 종류와 품종을 추천하고, 양육 시 주의사항과 조언을 친절하게 알려주세요.` }]
             }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+            generationConfig: { temperature: 0.7, maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: 0 } }
           })
         }
       );
