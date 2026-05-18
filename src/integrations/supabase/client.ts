@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://gmfjcjdcubayukecnzfg.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc2MiOiJzdGNYbYmFzZSiOnJlZiI6ImdtZmpjamRjYmFkYjheXVrZWN1emZnIiwicm9sZSI6ImFub2IicGpyXQiOjE3Nzk3NTUxOTcsImV4cCI6Mja5NDYzMTE1N30.MmCNYM_Pw63fGngdkUSnlNZm6YYdv-PavPQ4Kopyp0w";
+// 원래대로 import.meta.env를 바라보게 놔두면 됨
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
